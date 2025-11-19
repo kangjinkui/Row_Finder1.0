@@ -37,36 +37,43 @@ app.get('/api/health', (c) => {
   });
 });
 
-// API v1 Routes (will be expanded)
+// Import route modules
+import lawsRoutes from './routes/laws';
+import analysisRoutes from './routes/analysis';
+
+// API v1 Routes
 const apiV1 = new Hono<HonoEnv>();
 
-// Laws
-apiV1.get('/laws', (c) => {
-  return c.json({ message: 'Laws endpoint - Coming soon' });
-});
+// Mount sub-routes
+apiV1.route('/laws', lawsRoutes);
+apiV1.route('/analysis', analysisRoutes);
 
-apiV1.get('/laws/:lawId', (c) => {
-  const lawId = c.req.param('lawId');
-  return c.json({ message: `Law details for ${lawId}` });
-});
-
-// Regulations
+// Regulations (placeholder)
 apiV1.get('/regulations', (c) => {
   return c.json({ message: 'Regulations endpoint - Coming soon' });
 });
 
-// Analysis
-apiV1.get('/analysis', (c) => {
-  return c.json({ message: 'Analysis endpoint - Coming soon' });
+apiV1.get('/regulations/:regulationId', (c) => {
+  const regulationId = c.req.param('regulationId');
+  return c.json({ message: `Regulation details for ${regulationId}` });
 });
 
-apiV1.post('/analysis/trigger', async (c) => {
-  return c.json({ message: 'Trigger analysis - Coming soon' });
-});
-
-// Notifications
+// Notifications (placeholder)
 apiV1.get('/notifications', (c) => {
   return c.json({ message: 'Notifications endpoint - Coming soon' });
+});
+
+// Search (placeholder)
+apiV1.post('/search/laws', async (c) => {
+  return c.json({ message: 'Law search - Coming soon' });
+});
+
+apiV1.post('/search/regulations', async (c) => {
+  return c.json({ message: 'Regulation search - Coming soon' });
+});
+
+apiV1.post('/search/semantic', async (c) => {
+  return c.json({ message: 'Semantic search - Coming soon' });
 });
 
 // Mount API v1
