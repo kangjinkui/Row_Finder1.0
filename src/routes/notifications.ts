@@ -26,12 +26,18 @@ notifications.get('/', async (c) => {
     const query = c.req.query();
     const page = parseInt(query.page || '1');
     const limit = parseInt(query.limit || '20');
-    const read = query.read === 'true' ? true : query.read === 'false' ? false : undefined;
+    const offset = (page - 1) * limit;
+    const unreadOnly = query.read === 'false';
 
-    // TODO: Implement actual database query
-    // For now, return empty list
+    const { withDb } = await import('../utils/db');
+    const { createDatabaseService } = await import('../services/databaseImpl');
+
+    const result = await withDb(c.env, async (db) => {
+      const dbService = createDatabaseService(db);
+      return dbService.getNotificationsByUserId(user.user_id, unreadOnly, limit, offset);
+    });
     
-    return paginated(c, [], 0, page, limit);
+    return paginated(c, result.notifications, result.total, page, limit);
   } catch (err) {
     console.error('[Notifications API] Error listing notifications:', err);
     return error(c, 'Failed to fetch notifications', 500);
@@ -49,8 +55,13 @@ notifications.get('/unread-count', async (c) => {
       return error(c, 'User not found', 401);
     }
 
-    // TODO: Implement actual database query
-    const count = 0;
+    const { withDb } = await import('../utils/db');
+    const { createDatabaseService } = await import('../services/databaseImpl');
+
+    const count = await withDb(c.env, async (db) => {
+      const dbService = createDatabaseService(db);
+      return dbService.getUnreadNotificationCount(user.user_id);
+    });
     
     return success(c, { count });
   } catch (err) {

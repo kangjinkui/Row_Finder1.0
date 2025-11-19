@@ -35,18 +35,50 @@ auth.post('/register', async (c) => {
       return error(c, 'Password must be at least 8 characters', 400);
     }
 
-    // TODO: Check if user already exists
-    // TODO: Hash password using bcrypt
-    // TODO: Create user in database
+    const { withDb } = await import('../utils/db');
+    const { createDatabaseService } = await import('../services/databaseImpl');
+    const bcrypt = await import('bcryptjs');
+
+    const user = await withDb(c.env, async (db) => {
+      const dbService = createDatabaseService(db);
+      
+      // Check if user already exists
+      const existing = await dbService.getUserByEmail(email);
+      if (existing) {
+        throw new Error('User already exists');
+      }
+
+      // Hash password
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      // Create user
+      return dbService.createUser({
+        user_id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        username,
+        email,
+        password_hash: passwordHash,
+        local_gov,
+        department: department || '',
+        role: role || 'dept_officer',
+        notification_settings: {
+          email_enabled: true,
+          push_enabled: true,
+          impact_levels: ['HIGH', 'MEDIUM'],
+          departments: []
+        }
+      });
+    });
     
-    // For now, return mock response
     return success(c, {
       message: 'User registered successfully',
-      user_id: 'user_' + Date.now()
+      user_id: user.user_id
     }, 'Registration successful', 201);
 
   } catch (err) {
     console.error('[Auth API] Error registering user:', err);
+    if (err instanceof Error && err.message === 'User already exists') {
+      return error(c, 'User already exists', 409);
+    }
     return error(c, 'Failed to register user', 500);
   }
 });
@@ -64,48 +96,60 @@ auth.post('/login', async (c) => {
       return error(c, 'Email and password are required', 400);
     }
 
-    // TODO: Find user by email
-    // TODO: Verify password hash
-    // For now, use mock user
-    
-    // Mock user data (admin from seed data)
-    const user = {
-      user_id: 'user_admin_001',
-      username: 'admin',
-      email: 'admin@example.go.kr',
-      local_gov: '서울특별시',
-      department: '법무과',
-      role: 'admin'
-    };
+    const { withDb } = await import('../utils/db');
+    const { createDatabaseService } = await import('../services/databaseImpl');
+    const bcrypt = await import('bcryptjs');
+
+    const result = await withDb(c.env, async (db) => {
+      const dbService = createDatabaseService(db);
+      
+      // Find user by email
+      const user = await dbService.getUserByEmail(email);
+      if (!user) {
+        throw new Error('Invalid credentials');
+      }
+
+      // Verify password
+      const isValid = await bcrypt.compare(password, user.password_hash);
+      if (!isValid) {
+        throw new Error('Invalid credentials');
+      }
+
+      // Update last login
+      await dbService.updateLastLogin(user.user_id);
+
+      return user;
+    });
 
     // Generate JWT token
     const jwtSecret = c.env.JWT_SECRET || 'dev-secret-key-change-in-production';
     
     const token = await sign({
-      user_id: user.user_id,
-      email: user.email,
-      role: user.role,
-      local_gov: user.local_gov,
-      department: user.department,
+      user_id: result.user_id,
+      email: result.email,
+      role: result.role,
+      local_gov: result.local_gov,
+      department: result.department,
       exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 7) // 7 days
     }, jwtSecret);
-
-    // TODO: Update last_login timestamp in database
 
     return success(c, {
       token,
       user: {
-        user_id: user.user_id,
-        username: user.username,
-        email: user.email,
-        local_gov: user.local_gov,
-        department: user.department,
-        role: user.role
+        user_id: result.user_id,
+        username: result.username,
+        email: result.email,
+        local_gov: result.local_gov,
+        department: result.department,
+        role: result.role
       }
     });
 
   } catch (err) {
     console.error('[Auth API] Error logging in:', err);
+    if (err instanceof Error && err.message === 'Invalid credentials') {
+      return error(c, 'Invalid email or password', 401);
+    }
     return error(c, 'Failed to login', 500);
   }
 });

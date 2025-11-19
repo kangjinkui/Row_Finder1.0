@@ -23,14 +23,27 @@ laws.get('/', async (c) => {
     const query = c.req.query();
     const page = parseInt(query.page || '1');
     const limit = parseInt(query.limit || '20');
+    const offset = (page - 1) * limit;
     const lawType = query.type;
     const status = query.status;
     const category = query.category;
 
-    // TODO: Implement actual database query
-    // For now, return mock data
+    // Get database connection
+    const { withDb } = await import('../utils/db');
+    const { createDatabaseService } = await import('../services/databaseImpl');
+
+    const result = await withDb(c.env, async (db) => {
+      const dbService = createDatabaseService(db);
+      return dbService.getLaws({
+        law_type: lawType,
+        status,
+        category,
+        limit,
+        offset
+      });
+    });
     
-    return paginated(c, [], 0, page, limit);
+    return paginated(c, result.laws, result.total, page, limit);
   } catch (err) {
     console.error('[Laws API] Error listing laws:', err);
     return error(c, 'Failed to fetch laws', 500);
@@ -45,9 +58,19 @@ laws.get('/:lawId', async (c) => {
   try {
     const lawId = c.req.param('lawId');
 
-    // TODO: Implement actual database query
+    const { withDb } = await import('../utils/db');
+    const { createDatabaseService } = await import('../services/databaseImpl');
+
+    const law = await withDb(c.env, async (db) => {
+      const dbService = createDatabaseService(db);
+      return dbService.getLawById(lawId);
+    });
+
+    if (!law) {
+      return notFound(c, 'Law');
+    }
     
-    return notFound(c, 'Law');
+    return success(c, law);
   } catch (err) {
     console.error('[Laws API] Error fetching law:', err);
     return error(c, 'Failed to fetch law details', 500);
@@ -122,9 +145,25 @@ laws.post('/', authMiddleware, requireRole('admin'), async (c) => {
       return error(c, 'Missing required fields', 400);
     }
 
-    // TODO: Implement database insert
+    const { withDb } = await import('../utils/db');
+    const { createDatabaseService } = await import('../services/databaseImpl');
+
+    const law = await withDb(c.env, async (db) => {
+      const dbService = createDatabaseService(db);
+      return dbService.createLaw({
+        law_id: `law_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        law_type: body.law_type,
+        law_name: body.law_name,
+        law_number: body.law_number,
+        enactment_date: new Date(body.enactment_date),
+        current_version: body.current_version || '1.0',
+        status: body.status || '시행',
+        ministry: body.ministry || '',
+        category: body.category || ''
+      });
+    });
     
-    return success(c, { message: 'Law created successfully' }, 'Law created', 201);
+    return success(c, law, 'Law created', 201);
   } catch (err) {
     console.error('[Laws API] Error creating law:', err);
     return error(c, 'Failed to create law', 500);
