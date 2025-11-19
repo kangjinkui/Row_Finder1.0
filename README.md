@@ -37,13 +37,21 @@
 - [x] API 응답 유틸리티 함수
 - [x] 메인 대시보드 UI (프론트엔드)
 
-### 🚧 Phase 1: MVP Development (진행 중)
-- [ ] 법령 크롤러 서비스 (국가법령정보센터 API 연동)
-- [ ] 자치법규 크롤러 서비스
-- [ ] 법령-조례 연계 알고리즘
-- [ ] Vector Embedding 파이프라인
-- [ ] AI 영향 분석 엔진 (LLM 통합)
-- [ ] 알림 시스템
+### ✅ Phase 1: Core Services (완료)
+- [x] 법령 크롤러 서비스 구현 (국가법령정보센터 API 연동 준비)
+- [x] 자치법규 크롤러 서비스 구현 (자치법규정보시스템 API 연동 준비)
+- [x] 데이터베이스 서비스 레이어 구축
+- [x] Vector Embedding 서비스 (OpenAI API 통합)
+- [x] AI 영향 분석 엔진 (GPT-4 통합)
+- [x] Laws API 라우트 구현
+- [x] Analysis API 라우트 구현
+
+### 🚧 Phase 2: Integration & Testing (진행 중)
+- [ ] 실제 외부 API 연동 및 테스트
+- [ ] 데이터베이스 연결 및 실제 CRUD 구현
+- [ ] 법령-조례 연계 알고리즘 고도화
+- [ ] 알림 시스템 구현
+- [ ] 사용자 인증 시스템 완성
 
 ---
 
@@ -56,24 +64,44 @@ GET /api/health
 
 ### Laws Management
 ```http
-GET    /api/v1/laws
-GET    /api/v1/laws/:lawId
+GET    /api/v1/laws                          # 법령 목록 조회 (필터, 페이징)
+GET    /api/v1/laws/:lawId                   # 법령 상세 조회
+GET    /api/v1/laws/:lawId/revisions         # 법령 개정 이력 조회
+GET    /api/v1/laws/:lawId/articles          # 법령 조문 조회
+GET    /api/v1/laws/:lawId/linked-regulations # 연계된 자치법규 조회
+POST   /api/v1/laws                          # 법령 생성 (관리자)
+PUT    /api/v1/laws/:lawId                   # 법령 수정 (관리자)
+DELETE /api/v1/laws/:lawId                   # 법령 삭제 (관리자)
+POST   /api/v1/laws/crawl                    # 수동 크롤링 실행 (관리자)
 ```
 
 ### Regulations Management
 ```http
-GET    /api/v1/regulations
+GET    /api/v1/regulations                   # 자치법규 목록 조회
+GET    /api/v1/regulations/:regulationId     # 자치법규 상세 조회
 ```
 
 ### Impact Analysis
 ```http
-GET    /api/v1/analysis
-POST   /api/v1/analysis/trigger
+GET    /api/v1/analysis                      # 영향 분석 목록 (필터, 페이징)
+GET    /api/v1/analysis/:analysisId          # 영향 분석 상세 조회
+POST   /api/v1/analysis/trigger              # 영향 분석 실행
+PUT    /api/v1/analysis/:analysisId/review   # 검토 의견 제출
+GET    /api/v1/analysis/stats                # 통계 조회
+GET    /api/v1/analysis/:analysisId/history  # 검토 이력 조회
+POST   /api/v1/analysis/batch-review         # 일괄 검토
 ```
 
 ### Notifications
 ```http
-GET    /api/v1/notifications
+GET    /api/v1/notifications                 # 알림 목록 조회
+```
+
+### Search (준비 중)
+```http
+POST   /api/v1/search/laws                   # 법령 검색
+POST   /api/v1/search/regulations            # 자치법규 검색
+POST   /api/v1/search/semantic               # 의미 기반 검색
 ```
 
 ---
@@ -222,12 +250,17 @@ curl http://localhost:3000/api/health
 | Component | Status | Description |
 |-----------|--------|-------------|
 | API Server | ✅ 운영 중 | Hono 기반 REST API |
-| Database Schema | ✅ 완료 | PostgreSQL + pgvector |
+| Database Schema | ✅ 완료 | PostgreSQL + pgvector 마이그레이션 |
 | Frontend Dashboard | ✅ 완료 | 기본 대시보드 UI |
-| Law Crawler | 🚧 개발 예정 | 국가법령정보 API 연동 |
-| Regulation Crawler | 🚧 개발 예정 | 자치법규정보 API 연동 |
-| AI Analysis Engine | 🚧 개발 예정 | LLM 기반 영향 분석 |
+| Law Crawler | ✅ 구현 완료 | 국가법령정보 API 연동 준비 |
+| Regulation Crawler | ✅ 구현 완료 | 자치법규정보 API 연동 준비 |
+| Database Service | ✅ 구현 완료 | CRUD 및 Vector Search 인터페이스 |
+| Embedding Service | ✅ 구현 완료 | OpenAI Embeddings API 통합 |
+| AI Analysis Engine | ✅ 구현 완료 | GPT-4 기반 영향 분석 |
+| Laws API Routes | ✅ 구현 완료 | 법령 관리 엔드포인트 |
+| Analysis API Routes | ✅ 구현 완료 | 영향 분석 및 검토 엔드포인트 |
 | Notification System | 🚧 개발 예정 | 이메일/시스템 알림 |
+| Authentication | 🚧 개발 예정 | JWT 인증 완성 |
 
 ---
 
@@ -246,4 +279,4 @@ Copyright © 2024 AI 기반 자치법규 영향 분석 시스템. All rights res
 ---
 
 **최종 업데이트**: 2024-11-19  
-**버전**: 1.0.0 (Phase 0 완료)
+**버전**: 1.1.0 (Phase 1 완료 - Core Services Implemented)
