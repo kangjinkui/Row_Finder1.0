@@ -1,34 +1,37 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "webapp",
+  "name": "ai-law-analysis",
   "compatibility_date": "2025-11-19",
   "pages_build_output_dir": "./dist",
   "compatibility_flags": [
     "nodejs_compat"
   ]
-  // "vars": {
-  //   "MY_VAR": "my-variable"
-  // },
-  // "kv_namespaces": [
-  //   {
-  //     "binding": "MY_KV_NAMESPACE",
-  //     "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  //   }
-  // ],
-  // "r2_buckets": [
-  //   {
-  //     "binding": "MY_BUCKET",
-  //     "bucket_name": "my-bucket"
-  //   }
-  // ],
+  
+  // Note: Environment variables will be configured via .dev.vars locally
+  // and wrangler secrets for production
+  
+  // Future: Add D1 database binding when database is created
   // "d1_databases": [
   //   {
-  //     "binding": "MY_DB",
-  //     "database_name": "my-database",
+  //     "binding": "DB",
+  //     "database_name": "ai-law-analysis-db",
   //     "database_id": ""
   //   }
-  // ],
-  // "ai": {
-  //   "binding": "AI"
-  // }
+  // ]
+  
+  // Future: Add KV for caching
+  // "kv_namespaces": [
+  //   {
+  //     "binding": "KV",
+  //     "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  //   }
+  // ]
+  
+  // Future: Add R2 for document storage
+  // "r2_buckets": [
+  //   {
+  //     "binding": "R2",
+  //     "bucket_name": "ai-law-analysis-docs"
+  //   }
+  // ]
 }
