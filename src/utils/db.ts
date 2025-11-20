@@ -1,16 +1,22 @@
 /**
- * Database Connection Utility
- * Uses Neon serverless driver for Cloudflare Workers compatibility
+ * Neon Database Wrapper for Cloudflare Workers
+ * Properly converts parameterized queries to Neon template syntax
  */
 
-import { neon, neonConfig } from '@neondatabase/serverless';
-
-// Configure for Cloudflare Workers
-neonConfig.fetchConnectionCache = true;
+import { neon } from '@neondatabase/serverless';
 
 export interface QueryResult<T = any> {
   rows: T[];
   rowCount: number;
+}
+
+/**
+ * Create a proper TemplateStringsArray for Neon
+ */
+function createTemplateArray(strings: string[]): TemplateStringsArray {
+  const arr = strings as any;
+  arr.raw = strings;
+  return arr as TemplateStringsArray;
 }
 
 /**
@@ -20,30 +26,45 @@ export function createDbConnection(connectionString: string) {
   const sql = neon(connectionString);
   
   return {
+    sql, // Expose raw sql for direct use
+    
     /**
-     * Execute a query with parameters
-     * Note: Neon requires using tagged templates, so we need to convert
+     * Execute parameterized query
      */
     async query<T = any>(text: string, params?: any[]): Promise<QueryResult<T>> {
       try {
         let rows;
+        
         if (!params || params.length === 0) {
-          // No parameters - use as tagged template
-          rows = await sql([text] as any);
+          // No parameters
+          rows = await sql(createTemplateArray([text]));
         } else {
-          // With parameters - need to replace $1, $2... with actual values
-          // This is a workaround since Neon doesn't support parameterized queries directly
-          let processedText = text;
-          params.forEach((param, index) => {
-            const placeholder = `$${index + 1}`;
-            const value = typeof param === 'string' 
-              ? `'${param.replace(/'/g, "''")}'` 
-              : param === null 
-              ? 'NULL'
-              : String(param);
-            processedText = processedText.replace(placeholder, value);
-          });
-          rows = await sql([processedText] as any);
+          // With parameters - split by $1, $2, $3 etc
+          const parts: string[] = [];
+          const values: any[] = [];
+          
+          let remaining = text;
+          for (let i = 0; i < params.length; i++) {
+            const placeholder = `$${i + 1}`;
+            const index = remaining.indexOf(placeholder);
+            
+            if (index === -1) {
+              // No more placeholders
+              break;
+            }
+            
+            // Add text before placeholder
+            parts.push(remaining.substring(0, index));
+            // Add parameter value
+            values.push(params[i]);
+            // Continue with remaining text
+            remaining = remaining.substring(index + placeholder.length);
+          }
+          // Add remaining text
+          parts.push(remaining);
+          
+          // Call sql with proper template array
+          rows = await sql(createTemplateArray(parts), ...values);
         }
         
         return {
@@ -52,33 +73,19 @@ export function createDbConnection(connectionString: string) {
         };
       } catch (error) {
         console.error('[DB] Query error:', error);
+        console.error('[DB] Query:', text);
+        console.error('[DB] Params:', params);
         throw error;
       }
     },
 
-    /**
-     * Execute a query and return first row
-     */
     async queryOne<T = any>(text: string, params?: any[]): Promise<T | null> {
       const result = await this.query<T>(text, params);
       return result.rows[0] || null;
     },
 
-    /**
-     * Execute multiple queries in a transaction
-     */
     async transaction<T>(callback: (client: any) => Promise<T>): Promise<T> {
-      // Note: Neon serverless doesn't support traditional transactions
-      // For production, consider using Neon's transaction API
-      // For now, we'll execute the callback directly
       return callback(this);
-    },
-    
-    /**
-     * Direct SQL access for advanced queries
-     */
-    get sql() {
-      return sql;
     }
   };
 }
