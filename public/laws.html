@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>법령 목록 - AI 자치법규 영향 분석</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/style.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <!-- Loading Overlay -->
+    <div id="loading" class="loading-overlay hidden">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <a href="/" class="bg-blue-600 text-white rounded-lg p-2">
+                        <i class="fas fa-balance-scale text-2xl"></i>
+                    </a>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">AI 자치법규 영향 분석</h1>
+                        <p class="text-sm text-gray-500">법령 개정 자동 탐지 및 조례 검토 지원 시스템</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/regulations.html" class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
+                        <i class="fas fa-file-alt mr-2"></i>자치법규
+                    </a>
+                    <a href="/laws.html" class="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg">
+                        <i class="fas fa-gavel mr-2"></i>법령
+                    </a>
+                    <a href="/" class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
+                        <i class="fas fa-home mr-2"></i>대시보드
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Page Header -->
+        <div class="mb-6">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">상위 법령 목록</h2>
+            <p class="text-gray-600">지방자치 관련 주요 법령을 검색하고 연계된 자치법규를 확인할 수 있습니다.</p>
+        </div>
+
+        <!-- Search -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <form onsubmit="handleSearch(event, loadLaws)" class="flex gap-4">
+                <div class="flex-1 relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" 
+                           id="search-input"
+                           placeholder="법령 이름으로 검색..."
+                           class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                    <i class="fas fa-search mr-2"></i>검색
+                </button>
+            </form>
+        </div>
+
+        <!-- Laws List -->
+        <div id="laws-list" class="space-y-4 mb-8">
+            <!-- Will be populated by JavaScript -->
+        </div>
+
+        <!-- Pagination -->
+        <div id="pagination" class="flex items-center justify-center space-x-2">
+            <!-- Will be populated by JavaScript -->
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="text-center text-sm text-gray-500">
+                <p>© 2024 AI 기반 자치법규 영향 분석 시스템. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

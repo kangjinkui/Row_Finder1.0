@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>자치법규 상세 - AI 자치법규 영향 분석</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/style.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <!-- Loading Overlay -->
+    <div id="loading" class="loading-overlay hidden">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <a href="/" class="bg-blue-600 text-white rounded-lg p-2">
+                        <i class="fas fa-balance-scale text-2xl"></i>
+                    </a>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">AI 자치법규 영향 분석</h1>
+                        <p class="text-sm text-gray-500">자치법규 상세 정보</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/regulations.html" class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
+                        <i class="fas fa-arrow-left mr-2"></i>목록으로
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Regulation Info Card -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-6">
+            <h2 id="reg-name" class="text-3xl font-bold text-gray-900 mb-4">-</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div class="flex items-center">
+                    <span class="text-gray-500 w-32">법규 유형:</span>
+                    <span id="reg-type" class="font-medium text-gray-900">-</span>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-gray-500 w-32">지방자치단체:</span>
+                    <span id="reg-local-gov" class="font-medium text-gray-900">-</span>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-gray-500 w-32">담당부서:</span>
+                    <span id="reg-department" class="font-medium text-gray-900">-</span>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-gray-500 w-32">제정일:</span>
+                    <span id="reg-enactment-date" class="font-medium text-gray-900">-</span>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-gray-500 w-32">상태:</span>
+                    <span id="reg-status" class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-green-100 text-green-800 font-medium">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Linked Laws Section -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-8 py-6 border-b border-gray-200 flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900">연계된 상위법령</h3>
+                    <p class="text-sm text-gray-600 mt-1">이 자치법규와 관련된 상위법령 조문들입니다</p>
+                </div>
+                <span class="inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 font-semibold">
+                    총 <span id="total-links" class="mx-1">0</span>건
+                </span>
+            </div>
+            <div id="linked-laws" class="p-8 space-y-4">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="text-center text-sm text-gray-500">
+                <p>© 2024 AI 기반 자치법규 영향 분석 시스템. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

@@ -21,6 +21,7 @@ app.use('/api/*', cors());
 // Static Files
 // ============================================================
 app.use('/static/*', serveStatic({ root: './public' }));
+app.use('/*.html', serveStatic({ root: './public' }));
 
 // ============================================================
 // API Routes
@@ -72,12 +73,16 @@ app.get('/', (c) => {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>AI 기반 자치법규 영향 분석 시스템</title>
+        <title>AI 자치법규 영향 분석 시스템</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
         <link href="/static/style.css" rel="stylesheet">
     </head>
     <body class="bg-gray-50">
+        <!-- Loading Overlay -->
+        <div id="loading" class="loading-overlay hidden">
+            <div class="spinner"></div>
+        </div>
         <!-- Header -->
         <header class="bg-white shadow-sm border-b border-gray-200">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
