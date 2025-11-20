@@ -1,328 +1,407 @@
 # AI 기반 자치법규 영향 분석 시스템
 
-## 프로젝트 개요
+법령 개정 자동 탐지 및 AI 기반 자치법규 영향 분석 시스템
 
-상위법령(법률, 시행령 등) 개정 시 관련 자치법규(조례, 규칙)를 자동으로 탐지·비교·분석하여, 담당 공무원에게 검토 필요성 및 개정 권고사항을 제공하는 **AI 기반 법령 영향 분석 플랫폼**입니다.
+## 📋 프로젝트 개요
 
-### 핵심 가치
+이 시스템은 **법제처 Open API**를 통해 자치법규와 상위법령 데이터를 수집하고, **Google Gemini AI**를 활용한 벡터 임베딩 기술로 자치법규와 상위법령 간의 연관성을 자동으로 분석합니다.
 
-- **자동 탐지**: 상위법 개정 시 영향받는 자치법규 조문 자동 식별
-- **의미 분석**: AI 기반 조문 비교로 단순 문자열 대조를 넘어선 의미 변화 감지
-- **실시간 알림**: 개정 이벤트 발생 즉시 담당자에게 검토 필요 신호 전송
-- **표준화 관리**: 법령-조례 간 연계 데이터 체계적 관리
+### 🎯 주요 목적
 
----
-
-## 🌐 배포 정보
-
-### 개발 환경 (Sandbox)
-- **URL**: https://3000-it659h5af9cwbnqduu3yt-2e77fc33.sandbox.novita.ai
-- **API Health Check**: https://3000-it659h5af9cwbnqduu3yt-2e77fc33.sandbox.novita.ai/api/health
-- **Status**: ✅ 운영 중
-
-### 프로덕션 환경
-- **Platform**: Cloudflare Pages
-- **Status**: 🚧 준비 중
+- 자치법규와 상위법령 간의 연계 관계 자동 분석
+- AI 기반 유사도 계산을 통한 정확한 법령 매칭
+- 법무팀의 법규 검토 시간 단축
+- 법령 개정 시 영향받는 자치법규 즉시 파악
 
 ---
 
-## 📊 현재 완료된 기능
+## 🌐 배포 URL
 
-### ✅ Phase 0: Foundation (완료)
-- [x] 프로젝트 초기 설정 및 Hono 프레임워크 구축
-- [x] Git 저장소 초기화 및 버전 관리 시작
-- [x] TypeScript 타입 시스템 구축
-- [x] 데이터베이스 스키마 설계 (PostgreSQL + pgvector)
-- [x] 미들웨어 구현 (CORS, Logger, Auth)
-- [x] API 응답 유틸리티 함수
-- [x] 메인 대시보드 UI (프론트엔드)
+**개발 환경**: https://3000-it659h5af9cwbnqduu3yt-2e77fc33.sandbox.novita.ai
 
-### ✅ Phase 1: Core Services (완료)
-- [x] 법령 크롤러 서비스 구현 (국가법령정보센터 API 연동 준비)
-- [x] 자치법규 크롤러 서비스 구현 (자치법규정보시스템 API 연동 준비)
-- [x] 데이터베이스 서비스 레이어 구축
-- [x] Vector Embedding 서비스 (OpenAI API 통합)
-- [x] AI 영향 분석 엔진 (GPT-4 통합)
-- [x] Laws API 라우트 구현
-- [x] Analysis API 라우트 구현
-
-### ✅ Phase 2: Complete API System (완료)
-- [x] 알림 시스템 구현 (이메일 + 인앱 알림)
-- [x] 사용자 인증 시스템 (JWT 기반 로그인/회원가입)
-- [x] Regulations API 라우트 완성
-- [x] Search API 라우트 (일반 검색 + 시맨틱 검색)
-- [x] Notifications API 라우트
-- [x] Auth API 라우트
-
-### 🚧 Phase 3: Database Integration (진행 중)
-- [ ] 실제 PostgreSQL 데이터베이스 연결
-- [ ] 모든 API 엔드포인트의 실제 CRUD 구현
-- [ ] 외부 API (국가법령정보센터, 자치법규정보시스템) 실제 연동
-- [ ] 프론트엔드 UI 고도화
-- [ ] 통합 테스트
+**GitHub 저장소**: https://github.com/kangjinkui/Row_Finder1.0
 
 ---
 
-## 🔌 API 엔드포인트
+## ✨ 주요 기능
 
-### Health Check
-```http
-GET /api/health
-```
+### 1. 자치법규 검색 및 조회
+- **513개** 서울시 강남구 자치법규 (조례 398개, 규칙 115개)
+- 법규명, 소관부서로 검색
+- 조례/규칙 필터링
+- 페이지네이션 (20개씩)
 
-### Authentication
-```http
-POST   /api/v1/auth/register                 # 회원가입
-POST   /api/v1/auth/login                    # 로그인 (JWT 발급)
-POST   /api/v1/auth/logout                   # 로그아웃
-GET    /api/v1/auth/me                       # 현재 사용자 정보
-PUT    /api/v1/auth/me                       # 사용자 정보 수정
-POST   /api/v1/auth/change-password          # 비밀번호 변경
-POST   /api/v1/auth/forgot-password          # 비밀번호 재설정 요청
-POST   /api/v1/auth/reset-password           # 비밀번호 재설정
-GET    /api/v1/auth/verify-token             # 토큰 검증
-```
+### 2. 상위법령 검색 및 조회
+- **9개** 지방자치 관련 상위법령
+- 법령명 검색
+- 법령별 연계 자치법규 확인
 
-### Laws Management
-```http
-GET    /api/v1/laws                          # 법령 목록 조회 (필터, 페이징)
-GET    /api/v1/laws/:lawId                   # 법령 상세 조회
-GET    /api/v1/laws/:lawId/revisions         # 법령 개정 이력 조회
-GET    /api/v1/laws/:lawId/articles          # 법령 조문 조회
-GET    /api/v1/laws/:lawId/linked-regulations # 연계된 자치법규 조회
-POST   /api/v1/laws                          # 법령 생성 (관리자)
-PUT    /api/v1/laws/:lawId                   # 법령 수정 (관리자)
-DELETE /api/v1/laws/:lawId                   # 법령 삭제 (관리자)
-POST   /api/v1/laws/crawl                    # 수동 크롤링 실행 (관리자)
-```
+### 3. AI 기반 연계 분석
+- **2,555개** 자치법규-법령 연계 관계
+- **99.61%** 연계율 (511/513)
+- **벡터 유사도** 기반 자동 매칭
+- 유사도 점수 **0.65 이상** 항목만 표시
 
-### Regulations Management
-```http
-GET    /api/v1/regulations                   # 자치법규 목록 조회
-GET    /api/v1/regulations/:regulationId     # 자치법규 상세 조회
-GET    /api/v1/regulations/:regulationId/articles           # 조문 목록
-GET    /api/v1/regulations/:regulationId/linked-laws        # 연계 법령
-GET    /api/v1/regulations/:regulationId/impact-analyses    # 영향 분석 목록
-GET    /api/v1/regulations/local-gov/:localGovCode          # 지자체별 법규
-POST   /api/v1/regulations                   # 법규 생성 (관리자)
-PUT    /api/v1/regulations/:regulationId     # 법규 수정 (관리자)
-DELETE /api/v1/regulations/:regulationId     # 법규 삭제 (관리자)
-POST   /api/v1/regulations/crawl             # 수동 크롤링
-GET    /api/v1/regulations/stats             # 통계
-```
-
-### Impact Analysis
-```http
-GET    /api/v1/analysis                      # 영향 분석 목록 (필터, 페이징)
-GET    /api/v1/analysis/:analysisId          # 영향 분석 상세 조회
-POST   /api/v1/analysis/trigger              # 영향 분석 실행
-PUT    /api/v1/analysis/:analysisId/review   # 검토 의견 제출
-GET    /api/v1/analysis/stats                # 통계 조회
-GET    /api/v1/analysis/:analysisId/history  # 검토 이력 조회
-POST   /api/v1/analysis/batch-review         # 일괄 검토
-```
-
-### Notifications
-```http
-GET    /api/v1/notifications                 # 알림 목록 조회
-GET    /api/v1/notifications/unread-count    # 읽지 않은 알림 개수
-PUT    /api/v1/notifications/:id/read        # 알림 읽음 표시
-POST   /api/v1/notifications/mark-all-read   # 모든 알림 읽음 표시
-DELETE /api/v1/notifications/:id             # 알림 삭제
-GET    /api/v1/notifications/settings        # 알림 설정 조회
-PUT    /api/v1/notifications/settings        # 알림 설정 변경
-POST   /api/v1/notifications/test            # 테스트 알림 발송
-```
-
-### Search
-```http
-POST   /api/v1/search/laws                   # 법령 검색
-POST   /api/v1/search/regulations            # 자치법규 검색
-POST   /api/v1/search/articles               # 조문 검색
-POST   /api/v1/search/semantic               # 의미 기반 검색 (Vector Search)
-POST   /api/v1/search/similar-articles       # 유사 조문 찾기
-POST   /api/v1/search/analyze-query          # 검색어 분석
-GET    /api/v1/search/suggestions            # 자동완성 제안
-GET    /api/v1/search/recent                 # 최근 검색 기록
-```
+### 4. 실시간 통계 대시보드
+- 전체 자치법규/법령 수
+- 연계 관계 통계
+- 상위 참조 법령 Top 5
+- 소관부서별 법규 현황
 
 ---
 
-## 📁 데이터 아키텍처
-
-### Core Entities
-
-1. **laws** - 상위법령 (법률, 시행령, 시행규칙)
-2. **law_revisions** - 법령 개정 이력
-3. **articles** - 법령 조문 (vector embedding 포함)
-4. **local_regulations** - 자치법규 (조례, 규칙)
-5. **regulation_articles** - 자치법규 조문 (vector embedding 포함)
-6. **law_regulation_links** - 법령-조례 연계 관계
-7. **impact_analyses** - AI 영향 분석 결과
-8. **users** - 사용자 (법무담당, 실무부서)
-9. **notifications** - 알림
-10. **review_history** - 검토 이력
-
-### Storage Services
-
-- **Primary Database**: PostgreSQL 15+ with pgvector extension
-- **Cache**: Redis (Upstash)
-- **Object Storage**: Cloudflare R2 (문서 저장용)
-
----
-
-## 🛠 기술 스택
+## 🛠️ 기술 스택
 
 ### Backend
-- **Runtime**: Cloudflare Workers
-- **Framework**: Hono (TypeScript)
-- **Database**: PostgreSQL + pgvector
-- **AI/ML**: OpenAI GPT-4 API
+- **Hono** - Lightweight web framework
+- **Cloudflare Workers** - Edge runtime
+- **Neon PostgreSQL** - Serverless database
+- **pgvector** - Vector similarity search
+- **TypeScript** - Type-safe development
+
+### AI/ML
+- **Google Gemini API** - text-embedding-004 model
+- **Vector Dimension**: 1536
+- **Similarity**: Cosine similarity (pgvector)
 
 ### Frontend
-- **Framework**: React (embedded in HTML)
-- **Styling**: TailwindCSS
-- **Icons**: Font Awesome
-- **HTTP Client**: Axios
+- **Vanilla JavaScript** - No framework overhead
+- **Tailwind CSS** - Utility-first styling
+- **Font Awesome** - Icon library
+- **Axios** - HTTP client
 
 ### DevOps
-- **Hosting**: Cloudflare Pages
-- **Process Manager**: PM2 (development)
-- **Version Control**: Git
-- **CI/CD**: GitHub Actions (예정)
+- **Vite** - Build tool
+- **PM2** - Process manager
+- **Wrangler** - Cloudflare CLI
+- **Git** - Version control
+
+---
+
+## 📊 데이터 현황
+
+### 자치법규
+- **총 513개**
+  - 조례: 398개
+  - 규칙: 115개
+- **지역**: 서울시 강남구
+- **소관부서**: 22개 주요 부서
+
+### 상위법령 (9개)
+1. 지방자치단체를 당사자로 하는 계약에 관한 법률 (511개 연계)
+2. 지방교부세법 (511개 연계)
+3. 지방자치단체 출자·출연 기관의 운영에 관한 법률 (508개 연계)
+4. 지방공무원법 (502개 연계)
+5. 지방공기업법 (14개 연계)
+6. 지방재정법
+7. 지방교육자치에 관한 법률
+8. 공유재산 및 물품 관리법
+9. 주민소환에 관한 법률
+
+### 벡터 임베딩
+- **자치법규**: 513개 (100%)
+- **법령 조문**: 87개 (활성 조문)
+- **총 임베딩**: 600개
+- **성공률**: 100%
+
+### 연계 분석 결과
+- **총 연계 수**: 2,555개
+- **연계율**: 99.61% (511/513)
+- **평균 유사도**: 0.78~0.86
+- **자치법규당 평균 연계**: 5개
+
+---
+
+## 🎯 사용 방법
+
+### 1. 자치법규 검색
+1. 메인 페이지에서 **[자치법규 검색]** 클릭
+2. 검색창에 법규명 입력 (예: "1인가구", "복지", "환경")
+3. 필터에서 조례/규칙 선택 (선택사항)
+4. 검색 결과에서 원하는 법규 클릭
+
+### 2. 상위법령 확인
+1. 자치법규 상세 페이지에서 **연계된 상위법령** 섹션 확인
+2. 법령명, 조문 번호, 유사도 점수 표시됨
+3. 연계 유형: 근거법령, 준용, 참조
+
+### 3. 법령 검색
+1. 메인 페이지에서 **[법령 검색]** 클릭
+2. 법령명으로 검색
+3. 법령별 연계된 자치법규 수 확인
 
 ---
 
 ## 🚀 로컬 개발 환경 설정
 
-### 1. 의존성 설치
+### 필수 요구사항
+- Node.js 18+
+- npm or yarn
+- PostgreSQL (Neon 권장)
+- Gemini API Key
+
+### 설치 방법
+
 ```bash
+# 저장소 클론
+git clone https://github.com/kangjinkui/Row_Finder1.0.git
+cd Row_Finder1.0
+
+# 의존성 설치
 npm install
-```
 
-### 2. 환경 변수 설정
-`.dev.vars` 파일을 생성하고 다음 내용을 입력:
+# 환경 변수 설정
+cp .dev.vars.example .dev.vars
+# .dev.vars 파일에 다음 변수 설정:
+# DATABASE_URL=your_neon_database_url
+# GEMINI_API_KEY=your_gemini_api_key
 
-```env
-DATABASE_URL=postgresql://user:password@localhost:5432/ai_law_analysis
-JWT_SECRET=your-jwt-secret-key
-OPENAI_API_KEY=sk-your-openai-api-key
-LAW_API_KEY=your-law-api-key
-REGULATION_API_KEY=your-regulation-api-key
-SENDGRID_API_KEY=your-sendgrid-api-key
-```
+# 데이터베이스 마이그레이션 (필요시)
+npm run db:migrate:local
 
-### 3. 데이터베이스 마이그레이션
-```bash
-# PostgreSQL 설치 및 실행 (필요 시)
-# Mac: brew install postgresql
-# Ubuntu: sudo apt-get install postgresql
-
-# 데이터베이스 생성
-createdb ai_law_analysis
-
-# pgvector 확장 설치
-# Mac: brew install pgvector
-# Ubuntu: sudo apt-get install postgresql-15-pgvector
-
-# 마이그레이션 실행
-psql ai_law_analysis < migrations/0001_initial_schema.sql
-```
-
-### 4. 빌드 및 실행
-```bash
-# 빌드
+# 개발 서버 시작
 npm run build
-
-# 개발 서버 시작 (PM2)
-pm2 start ecosystem.config.cjs
-
-# 또는 직접 실행
 npm run dev:sandbox
 
-# 서버 확인
-curl http://localhost:3000/api/health
+# 또는 PM2로 시작
+pm2 start ecosystem.config.cjs
+```
+
+### 개발 서버
+- **개발 URL**: http://localhost:3000
+- **API Health**: http://localhost:3000/api/health
+- **대시보드**: http://localhost:3000/api/v1/stats/dashboard
+
+---
+
+## 📡 API 엔드포인트
+
+### 자치법규 API
+
+```bash
+# 자치법규 목록
+GET /api/v1/regulations
+Query: ?page=1&limit=20&search=검색어&type=조례
+
+# 자치법규 상세
+GET /api/v1/regulations/:id
+
+# 자치법규 연계 정보
+GET /api/v1/regulations/:id/links
+
+# 유사 자치법규 검색 (벡터 유사도)
+POST /api/v1/regulations/similar
+Body: { "query": "검색 텍스트" }
+
+# 자치법규 통계
+GET /api/v1/regulations/stats/summary
+```
+
+### 법령 API
+
+```bash
+# 법령 목록
+GET /api/v1/laws
+Query: ?page=1&limit=20&search=검색어
+
+# 법령 상세
+GET /api/v1/laws/:id
+
+# 법령 조문 목록
+GET /api/v1/laws/:id/articles
+
+# 법령 연계 자치법규
+GET /api/v1/laws/:id/linked-regulations
+
+# 법령 통계
+GET /api/v1/laws/stats/summary
+```
+
+### 통계 API
+
+```bash
+# 대시보드 통계
+GET /api/v1/stats/dashboard
+
+# 연계 관계 통계
+GET /api/v1/stats/linkage
 ```
 
 ---
 
-## 📝 사용자 가이드
+## 🗄️ 데이터베이스 스키마
 
-### 담당 공무원용
+### 주요 테이블
 
-1. **로그인**: 담당 부서 계정으로 로그인
-2. **대시보드 확인**: 검토 대기 건수, 긴급 알림 등 확인
-3. **알림 확인**: 상위법 개정으로 인한 검토 필요 조례 확인
-4. **영향 분석 검토**: AI가 분석한 영향도 및 권고사항 확인
-5. **의견 입력**: 개정 필요성 판단 및 의견 작성
-6. **처리 완료**: 검토 완료 표시
+**laws** - 상위법령
+- law_id (PK)
+- law_name
+- law_type
+- enactment_date
+- status
 
-### 시스템 관리자용
+**articles** - 법령 조문
+- article_id (PK)
+- law_id (FK)
+- article_number
+- article_content
+- vector_embedding (vector(1536))
 
-1. **크롤러 모니터링**: 법령 데이터 수집 상태 확인
-2. **연계 데이터 관리**: 법령-조례 매핑 검증 및 보정
-3. **사용자 관리**: 계정 생성 및 권한 설정
-4. **시스템 통계**: 전체 검토 현황 및 완료율 확인
+**local_regulations** - 자치법규
+- regulation_id (PK)
+- regulation_name
+- regulation_type
+- local_gov
+- department
+- vector_embedding (vector(1536))
 
----
-
-## 🔄 추천 개발 순서
-
-### Phase 1: Data Ingestion (다음 단계)
-1. 국가법령정보센터 API 연동
-2. 자치법규정보시스템 API 연동
-3. 데이터 파싱 및 정규화
-4. Vector Embedding 파이프라인
-
-### Phase 2: AI Analysis
-1. OpenAI API 통합
-2. 조문 비교 로직
-3. 영향도 점수 계산
-4. 신뢰도 평가
-
-### Phase 3: Notification & Workflow
-1. 알림 발송 시스템
-2. 검토 워크플로우
-3. 대시보드 고도화
+**law_regulation_links** - 연계 관계
+- link_id (PK)
+- law_id (FK)
+- regulation_id (FK)
+- article_id (FK)
+- confidence_score
+- link_type
 
 ---
 
-## 📊 시스템 현황
+## 🎨 프로젝트 구조
 
-| Component | Status | Description |
-|-----------|--------|-------------|
-| API Server | ✅ 운영 중 | Hono 기반 REST API (70+개 엔드포인트) |
-| Database Schema | ✅ 완료 | PostgreSQL + pgvector 마이그레이션 |
-| Frontend Dashboard | ✅ 완료 | 기본 대시보드 UI |
-| Law Crawler | ✅ 구현 완료 | 국가법령정보 API 연동 준비 |
-| Regulation Crawler | ✅ 구현 완료 | 자치법규정보 API 연동 준비 |
-| Database Service | ✅ 구현 완료 | CRUD 및 Vector Search 인터페이스 |
-| Embedding Service | ✅ 구현 완료 | OpenAI Embeddings API 통합 |
-| AI Analysis Engine | ✅ 구현 완료 | GPT-4 기반 영향 분석 |
-| Laws API Routes | ✅ 구현 완료 | 법령 관리 (9개 엔드포인트) |
-| Regulations API Routes | ✅ 구현 완료 | 자치법규 관리 (11개 엔드포인트) |
-| Analysis API Routes | ✅ 구현 완료 | 영향 분석 및 검토 (7개 엔드포인트) |
-| Authentication API | ✅ 구현 완료 | JWT 기반 인증 (9개 엔드포인트) |
-| Notifications API | ✅ 구현 완료 | 알림 관리 (8개 엔드포인트) |
-| Search API | ✅ 구현 완료 | 검색 기능 (8개 엔드포인트) |
-| Notification Service | ✅ 구현 완료 | 이메일(SendGrid) + 인앱 알림 |
-| Database Integration | 🚧 개발 예정 | 실제 PostgreSQL 연결 및 CRUD |
+```
+webapp/
+├── src/
+│   ├── index.tsx              # Main application entry
+│   ├── routes/                # API route handlers
+│   │   ├── regulations.ts     # Regulations API
+│   │   ├── laws.ts            # Laws API
+│   │   ├── stats.ts           # Statistics API
+│   │   └── ...
+│   ├── utils/
+│   │   └── neonDb.ts          # Database connection
+│   └── types/
+│       └── bindings.ts        # TypeScript types
+├── public/
+│   ├── static/
+│   │   ├── app.js             # Frontend JavaScript
+│   │   └── style.css          # Custom styles
+│   ├── regulations.html       # Regulations list page
+│   ├── regulation.html        # Regulation detail page
+│   └── laws.html              # Laws list page
+├── scripts/
+│   ├── crawl-local-regulations.js
+│   ├── crawl-laws.js
+│   ├── generate-embeddings.js
+│   └── link-regulations-to-laws.js
+├── wrangler.jsonc             # Cloudflare config
+├── package.json
+├── ecosystem.config.cjs       # PM2 config
+└── README.md
+```
+
+---
+
+## 🔧 스크립트 명령어
+
+```bash
+# 개발
+npm run dev              # Vite dev server
+npm run dev:sandbox      # Wrangler dev server (sandbox)
+npm run build            # Build for production
+
+# 데이터베이스
+npm run db:migrate:local # Apply migrations (local)
+npm run db:migrate:prod  # Apply migrations (production)
+npm run db:seed          # Seed test data
+npm run db:reset         # Reset local database
+
+# 배포
+npm run deploy           # Deploy to Cloudflare Pages
+npm run deploy:prod      # Deploy to production
+
+# Git
+npm run git:init         # Initialize git repository
+npm run git:commit       # Add and commit changes
+npm run git:status       # Check git status
+npm run git:log          # View commit history
+
+# 유틸리티
+npm run clean-port       # Kill process on port 3000
+npm run test             # Test health endpoint
+```
+
+---
+
+## 📈 성능 지표
+
+### 처리 속도
+- **벡터 임베딩 생성**: ~35분 (513개 자치법규)
+- **연계 분석**: ~10분 (44,631번 유사도 계산)
+- **API 응답 시간**:
+  - 목록 조회: ~500ms
+  - 상세 조회: ~300ms
+  - 연계 조회: ~800ms
+
+### 정확도
+- **임베딩 성공률**: 100%
+- **연계율**: 99.61%
+- **평균 유사도**: 0.78~0.86
+
+---
+
+## 🔮 향후 개발 계획
+
+### Phase 1: 법령 개정 모니터링 (진행 예정)
+- [ ] 법제처 API 자동 크롤링
+- [ ] 법령 개정 이력 추적
+- [ ] 개정 시 영향 자치법규 자동 분석
+- [ ] 이메일/SMS 알림 시스템
+
+### Phase 2: 고도화 (계획 중)
+- [ ] 사용자별 즐겨찾기 기능
+- [ ] 법규 비교 기능
+- [ ] 엑셀 내보내기
+- [ ] PDF 리포트 생성
+- [ ] 검토 이력 관리
+
+### Phase 3: 확장 (장기)
+- [ ] 다른 지자체 데이터 추가
+- [ ] 법령 전문 표시
+- [ ] 챗봇 인터페이스
+- [ ] 모바일 앱 개발
+
+---
+
+## 🤝 기여 방법
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 📝 라이선스
+
+이 프로젝트는 MIT 라이선스 하에 있습니다.
 
 ---
 
 ## 📞 문의
 
-- **프로젝트 담당**: AI Law Analysis Team
-- **기술 지원**: GitHub Issues
-- **이메일**: support@example.go.kr
+프로젝트 관련 문의사항이나 버그 리포트는 [GitHub Issues](https://github.com/kangjinkui/Row_Finder1.0/issues)에 등록해주세요.
 
 ---
 
-## 📄 라이선스
+## 📚 참고 자료
 
-Copyright © 2024 AI 기반 자치법규 영향 분석 시스템. All rights reserved.
+- [법제처 Open API](https://www.law.go.kr/LSW/openApi.do)
+- [Google Gemini API](https://ai.google.dev/)
+- [Hono Framework](https://hono.dev/)
+- [Cloudflare Workers](https://workers.cloudflare.com/)
+- [Neon Serverless Postgres](https://neon.tech/)
+- [pgvector](https://github.com/pgvector/pgvector)
 
 ---
 
-**최종 업데이트**: 2024-11-19  
-**버전**: 1.2.0 (Phase 2 완료 - Complete API System with 70+ Endpoints)
+**© 2024 AI 기반 자치법규 영향 분석 시스템. All rights reserved.**
