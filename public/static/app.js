@@ -237,7 +237,85 @@ function renderLawsList(laws) {
 }
 
 async function viewLaw(lawId) {
-  window.location.href = `/law.html?id=${lawId}`;
+  window.location.href = `/law?id=${lawId}`;
+}
+
+// Law Detail Functions
+async function loadLawDetail(lawId) {
+  showLoading();
+  try {
+    const [law, articles, linkedRegs] = await Promise.all([
+      fetchAPI(`/laws/${lawId}`),
+      fetchAPI(`/laws/${lawId}/articles`),
+      fetchAPI(`/laws/${lawId}/linked-regulations?limit=10`)
+    ]);
+    renderLawDetail(law, articles, linkedRegs);
+  } catch (error) {
+    showError('법령 상세 정보를 불러오는데 실패했습니다.');
+  } finally {
+    hideLoading();
+  }
+}
+
+function renderLawDetail(law, articlesData, linkedRegsData) {
+  // Law basic info
+  document.getElementById('law-name').textContent = law.law_name;
+  document.getElementById('law-type').textContent = law.law_type;
+  document.getElementById('law-number').textContent = law.law_number || 'N/A';
+  document.getElementById('law-ministry').textContent = law.ministry || '-';
+  document.getElementById('law-enactment-date').textContent = formatDate(law.enactment_date);
+  document.getElementById('law-status').textContent = law.status || '시행';
+  document.getElementById('law-category').textContent = law.category || '-';
+  
+  // Law articles
+  const articles = articlesData.articles || [];
+  document.getElementById('total-articles').textContent = articles.length;
+  
+  if (articles.length > 0) {
+    const articlesHTML = articles.map(article => `
+      <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
+        <div class="flex items-start justify-between">
+          <div class="flex-1">
+            <h4 class="text-base font-semibold text-gray-900 mb-1">제${article.article_number}조 ${article.article_title || ''}</h4>
+            <p class="text-sm text-gray-600 whitespace-pre-wrap">${article.article_content || '내용 없음'}</p>
+          </div>
+        </div>
+      </div>
+    `).join('');
+    document.getElementById('law-articles').innerHTML = articlesHTML;
+  } else {
+    document.getElementById('law-articles').innerHTML = '<p class="text-gray-500 text-center py-4">조문 정보가 없습니다.</p>';
+  }
+  
+  // Linked regulations
+  const regulations = linkedRegsData.regulations || [];
+  document.getElementById('total-linked-regs').textContent = regulations.length;
+  
+  if (regulations.length > 0) {
+    const regsHTML = regulations.map(reg => `
+      <div class="bg-white rounded-lg border border-gray-200 p-4 hover:border-blue-300 transition-colors cursor-pointer"
+           onclick="viewRegulation('${reg.regulation_id}')">
+        <div class="flex items-start justify-between">
+          <div class="flex-1">
+            <h4 class="text-base font-semibold text-gray-900 mb-1">${reg.regulation_name}</h4>
+            <div class="flex items-center space-x-3 text-xs">
+              <span class="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 text-blue-800">
+                ${reg.regulation_type}
+              </span>
+              <span class="inline-flex items-center px-2 py-1 rounded-full bg-green-100 text-green-800">
+                평균 유사도: ${formatConfidence(reg.avg_confidence)}
+              </span>
+              <span class="text-gray-500">${reg.link_count}개 조문 연계</span>
+            </div>
+          </div>
+          <i class="fas fa-chevron-right text-gray-400"></i>
+        </div>
+      </div>
+    `).join('');
+    document.getElementById('linked-regulations').innerHTML = regsHTML;
+  } else {
+    document.getElementById('linked-regulations').innerHTML = '<p class="text-gray-500 text-center py-4">연계된 자치법규가 없습니다.</p>';
+  }
 }
 
 // Pagination

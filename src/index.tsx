@@ -70,6 +70,7 @@ app.route('/api/v1', apiV1);
 import regulationsHTML from '../public/regulations.html?raw';
 import lawsHTML from '../public/laws.html?raw';
 import regulationHTML from '../public/regulation.html?raw';
+import lawHTML from '../public/law.html?raw';
 
 app.get('/regulations', (c) => {
   return c.html(regulationsHTML);
@@ -81,6 +82,10 @@ app.get('/laws', (c) => {
 
 app.get('/regulation', (c) => {
   return c.html(regulationHTML);
+});
+
+app.get('/law', (c) => {
+  return c.html(lawHTML);
 });
 
 app.get('/', (c) => {

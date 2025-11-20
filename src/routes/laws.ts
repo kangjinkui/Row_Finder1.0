@@ -96,7 +96,6 @@ laws.get('/:id', async (c) => {
         law_name,
         law_number,
         enactment_date,
-        enforcement_date,
         current_version,
         status,
         ministry,
@@ -198,33 +197,50 @@ laws.get('/:id/linked-regulations', async (c) => {
       }, 404);
     }
     
-    // Get linked regulations
+    // Get query parameters
+    const page = parseInt(c.req.query('page') || '1');
+    const limit = parseInt(c.req.query('limit') || '20');
+    const offset = (page - 1) * limit;
+    
+    // Get linked regulations (grouped by regulation_id)
     const links = await sql`
       SELECT 
-        lrl.link_id,
-        lrl.confidence_score,
-        lrl.link_type,
-        lrl.verified,
         lr.regulation_id,
         lr.regulation_name,
         lr.regulation_type,
         lr.local_gov,
         lr.department,
-        a.article_number,
-        a.article_title
+        COUNT(lrl.link_id) as link_count,
+        AVG(lrl.confidence_score) as avg_confidence
       FROM law_regulation_links lrl
       JOIN local_regulations lr ON lrl.regulation_id = lr.regulation_id
-      JOIN articles a ON lrl.article_id = a.article_id
       WHERE lrl.law_id = ${lawId}
-      ORDER BY lrl.confidence_score DESC
+      GROUP BY lr.regulation_id, lr.regulation_name, lr.regulation_type, lr.local_gov, lr.department
+      ORDER BY avg_confidence DESC
+      LIMIT ${limit}
+      OFFSET ${offset}
     `;
+    
+    // Get total count
+    const countResult = await sql`
+      SELECT COUNT(DISTINCT lrl.regulation_id) as count
+      FROM law_regulation_links lrl
+      WHERE lrl.law_id = ${lawId}
+    `;
+    const total = parseInt(countResult[0]?.count || 0);
     
     return c.json({
       success: true,
       data: {
         law_id: lawId,
-        total_linked_regulations: links.length,
-        linked_regulations: links
+        total_linked_regulations: total,
+        regulations: links,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit)
+        }
       }
     });
     
