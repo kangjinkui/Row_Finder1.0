@@ -117,6 +117,11 @@ async function loadRegulations(page = 1, search = '', type = '') {
 }
 
 function renderRegulationsList(regulations) {
+  if (!regulations || !Array.isArray(regulations) || regulations.length === 0) {
+    document.getElementById('regulations-list').innerHTML = '<p class="text-gray-500 text-center py-8">검색 결과가 없습니다.</p>';
+    return;
+  }
+  
   const html = regulations.map(reg => `
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow cursor-pointer"
          onclick="viewRegulation('${reg.regulation_id}')">
@@ -135,7 +140,7 @@ function renderRegulationsList(regulations) {
       </div>
     </div>
   `).join('');
-  document.getElementById('regulations-list').innerHTML = html || '<p class="text-gray-500 text-center py-8">검색 결과가 없습니다.</p>';
+  document.getElementById('regulations-list').innerHTML = html;
 }
 
 // Regulation Detail Functions
@@ -205,6 +210,11 @@ async function loadLaws(page = 1, search = '') {
 }
 
 function renderLawsList(laws) {
+  if (!laws || !Array.isArray(laws) || laws.length === 0) {
+    document.getElementById('laws-list').innerHTML = '<p class="text-gray-500 text-center py-8">검색 결과가 없습니다.</p>';
+    return;
+  }
+  
   const html = laws.map(law => `
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow cursor-pointer"
          onclick="viewLaw('${law.law_id}')">
@@ -215,7 +225,7 @@ function renderLawsList(laws) {
             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 font-medium">
               ${law.law_type}
             </span>
-            <span><i class="fas fa-file-alt mr-1"></i>${law.law_number || '-'}</span>
+            <span><i class="fas fa-file-alt mr-1"></i>${law.law_number || 'N/A'}</span>
             <span><i class="fas fa-calendar mr-1"></i>${formatDate(law.enactment_date)}</span>
           </div>
         </div>
@@ -223,7 +233,7 @@ function renderLawsList(laws) {
       </div>
     </div>
   `).join('');
-  document.getElementById('laws-list').innerHTML = html || '<p class="text-gray-500 text-center py-8">검색 결과가 없습니다.</p>';
+  document.getElementById('laws-list').innerHTML = html;
 }
 
 async function viewLaw(lawId) {
