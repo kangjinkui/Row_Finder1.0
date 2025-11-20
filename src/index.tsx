@@ -44,6 +44,7 @@ import analysisRoutes from './routes/analysis';
 import regulationsRoutes from './routes/regulations';
 import notificationsRoutes from './routes/notifications';
 import searchRoutes from './routes/search';
+import statsRoutes from './routes/stats';
 
 // API v1 Routes
 const apiV1 = new Hono<HonoEnv>();
@@ -55,6 +56,7 @@ apiV1.route('/analysis', analysisRoutes);
 apiV1.route('/regulations', regulationsRoutes);
 apiV1.route('/notifications', notificationsRoutes);
 apiV1.route('/search', searchRoutes);
+apiV1.route('/stats', statsRoutes);
 
 // Mount API v1
 app.route('/api/v1', apiV1);

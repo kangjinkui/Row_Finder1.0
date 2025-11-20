@@ -1,228 +1,290 @@
-/**
- * Laws API Routes
- */
-
 import { Hono } from 'hono';
-import type { HonoEnv } from '../types/bindings';
-import { success, error, paginated, notFound } from '../utils/response';
-import { authMiddleware, requireRole } from '../middleware/auth';
-import * as lawCrawler from '../services/lawCrawler';
+import { createDbConnection } from '../utils/neonDb';
 
-const laws = new Hono<HonoEnv>();
+const laws = new Hono();
 
-// ============================================================
-// Public Routes (no auth required)
-// ============================================================
-
-/**
- * GET /api/laws
- * List all laws with filtering and pagination
- */
+// GET /api/v1/laws - 법령 목록 조회
 laws.get('/', async (c) => {
   try {
-    const query = c.req.query();
-    const page = parseInt(query.page || '1');
-    const limit = parseInt(query.limit || '20');
+    const { neon: sql } = createDbConnection(c);
+    
+    // Query parameters
+    const page = parseInt(c.req.query('page') || '1');
+    const limit = parseInt(c.req.query('limit') || '20');
     const offset = (page - 1) * limit;
-    const lawType = query.type;
-    const status = query.status;
-    const category = query.category;
-
-    // Get database connection
-    const { withDb } = await import('../utils/db');
-    const { createDatabaseService } = await import('../services/databaseImpl');
-
-    const result = await withDb(c.env, async (db) => {
-      const dbService = createDatabaseService(db);
-      return dbService.getLaws({
-        law_type: lawType,
+    const search = c.req.query('search') || '';
+    const type = c.req.query('type') || ''; // 법률, 대통령령, 부령 등
+    const status = c.req.query('status') || '';
+    
+    // Build query conditions
+    let whereConditions = [];
+    if (search) {
+      whereConditions.push(`law_name ILIKE '%${search}%'`);
+    }
+    if (type) {
+      whereConditions.push(`law_type = '${type}'`);
+    }
+    if (status) {
+      whereConditions.push(`status = '${status}'`);
+    }
+    
+    const whereClause = whereConditions.length > 0 
+      ? 'WHERE ' + whereConditions.join(' AND ')
+      : '';
+    
+    // Get total count
+    const countResult = await sql`
+      SELECT COUNT(*) as count 
+      FROM laws
+      ${sql.unsafe(whereClause)}
+    `;
+    const total = parseInt(countResult[0].count);
+    
+    // Get paginated results
+    const results = await sql`
+      SELECT 
+        law_id,
+        law_name,
+        law_type,
+        law_number,
+        enactment_date,
+        current_version,
         status,
+        ministry,
         category,
-        limit,
-        offset
-      });
+        created_at
+      FROM laws
+      ${sql.unsafe(whereClause)}
+      ORDER BY law_name
+      LIMIT ${limit}
+      OFFSET ${offset}
+    `;
+    
+    return c.json({
+      success: true,
+      data: {
+        laws: results,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit)
+        }
+      }
     });
     
-    return paginated(c, result.laws, result.total, page, limit);
-  } catch (err) {
-    console.error('[Laws API] Error listing laws:', err);
-    return error(c, 'Failed to fetch laws', 500);
+  } catch (error: any) {
+    console.error('Error fetching laws:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to fetch laws'
+    }, 500);
   }
 });
 
-/**
- * GET /api/laws/:lawId
- * Get law details by ID
- */
-laws.get('/:lawId', async (c) => {
+// GET /api/v1/laws/:id - 법령 상세 조회
+laws.get('/:id', async (c) => {
   try {
-    const lawId = c.req.param('lawId');
-
-    const { withDb } = await import('../utils/db');
-    const { createDatabaseService } = await import('../services/databaseImpl');
-
-    const law = await withDb(c.env, async (db) => {
-      const dbService = createDatabaseService(db);
-      return dbService.getLawById(lawId);
-    });
-
-    if (!law) {
-      return notFound(c, 'Law');
+    const { neon: sql } = createDbConnection(c);
+    const lawId = c.req.param('id');
+    
+    // Get law details
+    const results = await sql`
+      SELECT 
+        law_id,
+        law_type,
+        law_name,
+        law_number,
+        enactment_date,
+        enforcement_date,
+        current_version,
+        status,
+        ministry,
+        category,
+        created_at,
+        updated_at
+      FROM laws
+      WHERE law_id = ${lawId}
+    `;
+    
+    if (results.length === 0) {
+      return c.json({
+        success: false,
+        error: 'Law not found'
+      }, 404);
     }
     
-    return success(c, law);
-  } catch (err) {
-    console.error('[Laws API] Error fetching law:', err);
-    return error(c, 'Failed to fetch law details', 500);
-  }
-});
-
-/**
- * GET /api/laws/:lawId/revisions
- * Get revision history for a law
- */
-laws.get('/:lawId/revisions', async (c) => {
-  try {
-    const lawId = c.req.param('lawId');
-
-    // TODO: Implement actual database query
+    return c.json({
+      success: true,
+      data: results[0]
+    });
     
-    return success(c, { revisions: [] });
-  } catch (err) {
-    console.error('[Laws API] Error fetching revisions:', err);
-    return error(c, 'Failed to fetch revisions', 500);
+  } catch (error: any) {
+    console.error('Error fetching law:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to fetch law'
+    }, 500);
   }
 });
 
-/**
- * GET /api/laws/:lawId/articles
- * Get articles for a law
- */
-laws.get('/:lawId/articles', async (c) => {
+// GET /api/v1/laws/:id/articles - 법령 조문 목록 조회
+laws.get('/:id/articles', async (c) => {
   try {
-    const lawId = c.req.param('lawId');
-
-    // TODO: Implement actual database query
+    const { neon: sql } = createDbConnection(c);
+    const lawId = c.req.param('id');
     
-    return success(c, { articles: [] });
-  } catch (err) {
-    console.error('[Laws API] Error fetching articles:', err);
-    return error(c, 'Failed to fetch articles', 500);
-  }
-});
-
-/**
- * GET /api/laws/:lawId/linked-regulations
- * Get regulations linked to this law
- */
-laws.get('/:lawId/linked-regulations', async (c) => {
-  try {
-    const lawId = c.req.param('lawId');
-
-    // TODO: Implement actual database query
+    // Check if law exists
+    const lawCheck = await sql`
+      SELECT law_id FROM laws WHERE law_id = ${lawId}
+    `;
     
-    return success(c, { regulations: [] });
-  } catch (err) {
-    console.error('[Laws API] Error fetching linked regulations:', err);
-    return error(c, 'Failed to fetch linked regulations', 500);
-  }
-});
-
-// ============================================================
-// Protected Routes (require authentication)
-// ============================================================
-
-/**
- * POST /api/laws
- * Create a new law (admin only)
- */
-laws.post('/', authMiddleware, requireRole('admin'), async (c) => {
-  try {
-    const body = await c.req.json();
-
-    // Validate required fields
-    if (!body.law_name || !body.law_type || !body.law_number) {
-      return error(c, 'Missing required fields', 400);
+    if (lawCheck.length === 0) {
+      return c.json({
+        success: false,
+        error: 'Law not found'
+      }, 404);
     }
-
-    const { withDb } = await import('../utils/db');
-    const { createDatabaseService } = await import('../services/databaseImpl');
-
-    const law = await withDb(c.env, async (db) => {
-      const dbService = createDatabaseService(db);
-      return dbService.createLaw({
-        law_id: `law_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        law_type: body.law_type,
-        law_name: body.law_name,
-        law_number: body.law_number,
-        enactment_date: new Date(body.enactment_date),
-        current_version: body.current_version || '1.0',
-        status: body.status || '시행',
-        ministry: body.ministry || '',
-        category: body.category || ''
-      });
+    
+    // Get articles
+    const articles = await sql`
+      SELECT 
+        article_id,
+        article_number,
+        article_title,
+        article_content,
+        parent_article_id,
+        is_deleted,
+        vector_embedding IS NOT NULL as has_embedding,
+        created_at
+      FROM articles
+      WHERE law_id = ${lawId}
+      ORDER BY article_number
+    `;
+    
+    return c.json({
+      success: true,
+      data: {
+        law_id: lawId,
+        total_articles: articles.length,
+        articles: articles
+      }
     });
     
-    return success(c, law, 'Law created', 201);
-  } catch (err) {
-    console.error('[Laws API] Error creating law:', err);
-    return error(c, 'Failed to create law', 500);
+  } catch (error: any) {
+    console.error('Error fetching articles:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to fetch articles'
+    }, 500);
   }
 });
 
-/**
- * PUT /api/laws/:lawId
- * Update law details (admin only)
- */
-laws.put('/:lawId', authMiddleware, requireRole('admin'), async (c) => {
+// GET /api/v1/laws/:id/linked-regulations - 법령에 연계된 자치법규 조회
+laws.get('/:id/linked-regulations', async (c) => {
   try {
-    const lawId = c.req.param('lawId');
-    const body = await c.req.json();
-
-    // TODO: Implement database update
+    const { neon: sql } = createDbConnection(c);
+    const lawId = c.req.param('id');
     
-    return success(c, { message: 'Law updated successfully' });
-  } catch (err) {
-    console.error('[Laws API] Error updating law:', err);
-    return error(c, 'Failed to update law', 500);
-  }
-});
-
-/**
- * DELETE /api/laws/:lawId
- * Delete a law (admin only)
- */
-laws.delete('/:lawId', authMiddleware, requireRole('admin'), async (c) => {
-  try {
-    const lawId = c.req.param('lawId');
-
-    // TODO: Implement database deletion
+    // Check if law exists
+    const lawCheck = await sql`
+      SELECT law_id FROM laws WHERE law_id = ${lawId}
+    `;
     
-    return success(c, { message: 'Law deleted successfully' });
-  } catch (err) {
-    console.error('[Laws API] Error deleting law:', err);
-    return error(c, 'Failed to delete law', 500);
-  }
-});
-
-/**
- * POST /api/laws/crawl
- * Trigger manual crawl (admin only)
- */
-laws.post('/crawl', authMiddleware, requireRole('admin'), async (c) => {
-  try {
-    const apiKey = c.env.LAW_API_KEY || '';
-
-    // Run crawler in background
-    const result = await lawCrawler.runDailyCrawl(apiKey);
-
-    return success(c, {
-      message: 'Crawl completed',
-      stats: result.stats
+    if (lawCheck.length === 0) {
+      return c.json({
+        success: false,
+        error: 'Law not found'
+      }, 404);
+    }
+    
+    // Get linked regulations
+    const links = await sql`
+      SELECT 
+        lrl.link_id,
+        lrl.confidence_score,
+        lrl.link_type,
+        lrl.verified,
+        lr.regulation_id,
+        lr.regulation_name,
+        lr.regulation_type,
+        lr.local_gov,
+        lr.department,
+        a.article_number,
+        a.article_title
+      FROM law_regulation_links lrl
+      JOIN local_regulations lr ON lrl.regulation_id = lr.regulation_id
+      JOIN articles a ON lrl.article_id = a.article_id
+      WHERE lrl.law_id = ${lawId}
+      ORDER BY lrl.confidence_score DESC
+    `;
+    
+    return c.json({
+      success: true,
+      data: {
+        law_id: lawId,
+        total_linked_regulations: links.length,
+        linked_regulations: links
+      }
     });
-  } catch (err) {
-    console.error('[Laws API] Error running crawler:', err);
-    return error(c, 'Failed to run crawler', 500);
+    
+  } catch (error: any) {
+    console.error('Error fetching linked regulations:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to fetch linked regulations'
+    }, 500);
+  }
+});
+
+// GET /api/v1/laws/stats/summary - 법령 통계
+laws.get('/stats/summary', async (c) => {
+  try {
+    const { neon: sql } = createDbConnection(c);
+    
+    // Total counts
+    const totalLaws = await sql`SELECT COUNT(*) as count FROM laws`;
+    const totalArticles = await sql`SELECT COUNT(*) as count FROM articles`;
+    const articlesWithEmbedding = await sql`SELECT COUNT(*) as count FROM articles WHERE vector_embedding IS NOT NULL`;
+    
+    // By type
+    const byType = await sql`
+      SELECT law_type, COUNT(*) as count
+      FROM laws
+      GROUP BY law_type
+      ORDER BY count DESC
+    `;
+    
+    // By status
+    const byStatus = await sql`
+      SELECT status, COUNT(*) as count
+      FROM laws
+      WHERE status IS NOT NULL
+      GROUP BY status
+      ORDER BY count DESC
+    `;
+    
+    // Total links
+    const totalLinks = await sql`SELECT COUNT(*) as count FROM law_regulation_links`;
+    
+    return c.json({
+      success: true,
+      data: {
+        total_laws: parseInt(totalLaws[0].count),
+        total_articles: parseInt(totalArticles[0].count),
+        articles_with_embedding: parseInt(articlesWithEmbedding[0].count),
+        total_links: parseInt(totalLinks[0].count),
+        by_type: byType,
+        by_status: byStatus
+      }
+    });
+    
+  } catch (error: any) {
+    console.error('Error fetching law stats:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to fetch law stats'
+    }, 500);
   }
 });
 
