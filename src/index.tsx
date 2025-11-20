@@ -66,6 +66,23 @@ app.route('/api/v1', apiV1);
 // Frontend Routes
 // ============================================================
 
+// Import HTML files as raw strings
+import regulationsHTML from '../public/regulations.html?raw';
+import lawsHTML from '../public/laws.html?raw';
+import regulationHTML from '../public/regulation.html?raw';
+
+app.get('/regulations', (c) => {
+  return c.html(regulationsHTML);
+});
+
+app.get('/laws', (c) => {
+  return c.html(lawsHTML);
+});
+
+app.get('/regulation', (c) => {
+  return c.html(regulationHTML);
+});
+
 app.get('/', (c) => {
   return c.html(`
     <!DOCTYPE html>
@@ -97,12 +114,15 @@ app.get('/', (c) => {
                         </div>
                     </div>
                     <div class="flex items-center space-x-4">
-                        <button class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
-                            <i class="fas fa-bell mr-2"></i>알림
-                        </button>
-                        <button class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg">
-                            <i class="fas fa-user mr-2"></i>로그인
-                        </button>
+                        <a href="/regulations" class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
+                            <i class="fas fa-file-alt mr-2"></i>자치법규
+                        </a>
+                        <a href="/laws" class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
+                            <i class="fas fa-gavel mr-2"></i>법령
+                        </a>
+                        <a href="/" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg">
+                            <i class="fas fa-home mr-2"></i>대시보드
+                        </a>
                     </div>
                 </div>
             </div>
@@ -110,37 +130,39 @@ app.get('/', (c) => {
 
         <!-- Main Content -->
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Quick Access -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <a href="/regulations" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+                    <div class="flex items-center space-x-4">
+                        <div class="bg-blue-100 rounded-full p-4">
+                            <i class="fas fa-file-alt text-blue-600 text-3xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-900">자치법규 검색</h3>
+                            <p class="text-gray-600 mt-1">조례 및 규칙 검색 및 상위법령 확인</p>
+                        </div>
+                    </div>
+                </a>
+                <a href="/laws" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+                    <div class="flex items-center space-x-4">
+                        <div class="bg-purple-100 rounded-full p-4">
+                            <i class="fas fa-gavel text-purple-600 text-3xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-900">법령 검색</h3>
+                            <p class="text-gray-600 mt-1">상위법령 및 연계 자치법규 확인</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
             <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div id="stats-cards" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <div class="bg-white rounded-lg shadow p-6">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-gray-600">검토 대기</p>
-                            <p class="text-3xl font-bold text-gray-900 mt-2">0</p>
-                        </div>
-                        <div class="bg-orange-100 rounded-full p-3">
-                            <i class="fas fa-clock text-orange-600 text-xl"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-lg shadow p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-gray-600">긴급 알림</p>
-                            <p class="text-3xl font-bold text-gray-900 mt-2">0</p>
-                        </div>
-                        <div class="bg-red-100 rounded-full p-3">
-                            <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-lg shadow p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-gray-600">이번 달 개정</p>
-                            <p class="text-3xl font-bold text-gray-900 mt-2">0</p>
+                            <p class="text-sm font-medium text-gray-600">자치법규</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-2" id="stat-regulations">-</p>
                         </div>
                         <div class="bg-blue-100 rounded-full p-3">
                             <i class="fas fa-file-alt text-blue-600 text-xl"></i>
@@ -151,11 +173,35 @@ app.get('/', (c) => {
                 <div class="bg-white rounded-lg shadow p-6">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-gray-600">완료율</p>
-                            <p class="text-3xl font-bold text-gray-900 mt-2">0%</p>
+                            <p class="text-sm font-medium text-gray-600">상위법령</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-2" id="stat-laws">-</p>
+                        </div>
+                        <div class="bg-purple-100 rounded-full p-3">
+                            <i class="fas fa-gavel text-purple-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">연계 관계</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-2" id="stat-links">-</p>
                         </div>
                         <div class="bg-green-100 rounded-full p-3">
-                            <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                            <i class="fas fa-link text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">연계율</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-2" id="stat-coverage">-</p>
+                        </div>
+                        <div class="bg-orange-100 rounded-full p-3">
+                            <i class="fas fa-percentage text-orange-600 text-xl"></i>
                         </div>
                     </div>
                 </div>
@@ -257,13 +303,21 @@ app.get('/', (c) => {
 
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
         <script>
-            // Check API health on load
+            // Load dashboard stats
             window.addEventListener('DOMContentLoaded', async () => {
                 try {
-                    const response = await axios.get('/api/health');
-                    console.log('API Status:', response.data);
+                    const response = await axios.get('/api/v1/stats/dashboard');
+                    const data = response.data.data;
+                    
+                    // Update stats
+                    document.getElementById('stat-regulations').textContent = data.overview.total_regulations || '-';
+                    document.getElementById('stat-laws').textContent = data.overview.total_laws || '-';
+                    document.getElementById('stat-links').textContent = data.overview.total_links || '-';
+                    document.getElementById('stat-coverage').textContent = data.coverage.linkage_rate || '-';
+                    
+                    console.log('Dashboard loaded:', data);
                 } catch (error) {
-                    console.error('API Health Check Failed:', error);
+                    console.error('Failed to load dashboard:', error);
                 }
             });
         </script>
