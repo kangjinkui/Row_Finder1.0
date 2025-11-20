@@ -11,7 +11,9 @@
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "clean-port": "fuser -k 3000/tcp 2>/dev/null || true",
     "test": "curl http://localhost:3000",
-    "git:commit": "git add . && git commit -m"
+    "git:commit": "git add . && git commit -m",
+    "db:migrate": "node --env-file=.dev.vars scripts/migrate-simple.js",
+    "db:check": "node --env-file=.dev.vars scripts/check-db.js"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",

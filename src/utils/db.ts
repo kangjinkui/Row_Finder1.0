@@ -21,11 +21,31 @@ export function createDbConnection(connectionString: string) {
   
   return {
     /**
-     * Execute a query
+     * Execute a query with parameters
+     * Note: Neon requires using tagged templates, so we need to convert
      */
     async query<T = any>(text: string, params?: any[]): Promise<QueryResult<T>> {
       try {
-        const rows = await sql(text, params || []);
+        let rows;
+        if (!params || params.length === 0) {
+          // No parameters - use as tagged template
+          rows = await sql([text] as any);
+        } else {
+          // With parameters - need to replace $1, $2... with actual values
+          // This is a workaround since Neon doesn't support parameterized queries directly
+          let processedText = text;
+          params.forEach((param, index) => {
+            const placeholder = `$${index + 1}`;
+            const value = typeof param === 'string' 
+              ? `'${param.replace(/'/g, "''")}'` 
+              : param === null 
+              ? 'NULL'
+              : String(param);
+            processedText = processedText.replace(placeholder, value);
+          });
+          rows = await sql([processedText] as any);
+        }
+        
         return {
           rows: rows as T[],
           rowCount: rows.length
@@ -52,6 +72,13 @@ export function createDbConnection(connectionString: string) {
       // For production, consider using Neon's transaction API
       // For now, we'll execute the callback directly
       return callback(this);
+    },
+    
+    /**
+     * Direct SQL access for advanced queries
+     */
+    get sql() {
+      return sql;
     }
   };
 }
