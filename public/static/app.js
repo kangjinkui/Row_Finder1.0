@@ -140,7 +140,7 @@ function renderRegulationsList(regulations) {
 
 // Regulation Detail Functions
 async function viewRegulation(regulationId) {
-  window.location.href = `/regulation.html?id=${regulationId}`;
+  window.location.href = `/regulation?id=${regulationId}`;
 }
 
 async function loadRegulationDetail(regulationId) {

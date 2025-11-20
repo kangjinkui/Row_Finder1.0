@@ -28,10 +28,10 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <a href="/regulations.html" class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
+                    <a href="/regulations" class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
                         <i class="fas fa-file-alt mr-2"></i>자치법규
                     </a>
-                    <a href="/laws.html" class="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg">
+                    <a href="/laws" class="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg">
                         <i class="fas fa-gavel mr-2"></i>법령
                     </a>
                     <a href="/" class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
@@ -87,5 +87,18 @@
     </footer>
 
     <script src="/static/app.js"></script>
+    <script>
+        // Load laws list on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadLaws(1);
+        });
+        
+        // Handle search form submission
+        function handleSearch(event, callback) {
+            event.preventDefault();
+            const search = document.getElementById('search-input').value;
+            callback(1, search);
+        }
+    </script>
 </body>
 </html>
